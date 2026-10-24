@@ -1,0 +1,12 @@
+.venv/
+data/
+__pycache__/
+*.log
+tests/artifacts/
+build/
+dist/
+release/
+packaging/tools/
+packaging/stage/
+onboarding.json
+app.env

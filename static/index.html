@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#C55C7E"><title>一伯六十八的ASMR听译间</title><link rel="icon" href="/favicon.ico"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/brand.css"></head>
+<body>
+<header><a class="brand" href="/" aria-label="一伯六十八的ASMR听译间首页"><img class="brand-logo" src="/logo.jpg" alt="一伯六十八的头像"><span>一伯六十八的<span class="brand-subtitle">ASMR听译间</span></span></a><div class="header-tools"><button type="button" id="help">使用教程</button><div id="health" class="health">正在检查运行环境…</div></div></header>
+<main>
+  <section class="intro"><div><p class="eyebrow">从声音，到每一句字幕</p><h1>留住低语，<span>译得清楚。</span></h1><p>导入原片与发布信息，完成识别、双语翻译和逐句校对。</p></div><div class="audio-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></section>
+  <div class="workspace">
+    <aside>
+      <section class="panel dependencies"><div class="section-heading"><h2>运行组件</h2><span class="tag">按需下载</span></div>
+        <p class="hint">安装包不包含 FFmpeg 和语音模型。首次使用时分别下载一次，之后可离线识别。</p>
+        <div class="dependency"><div><strong>FFmpeg</strong><small id="ffmpeg-state">正在检查…</small><a id="ffmpeg-link" target="_blank" rel="noopener noreferrer">下载链接</a></div><button type="button" id="ffmpeg-download">下载并安装</button></div>
+        <div class="dependency"><div><strong>small 识别模型</strong><small id="model-state">正在检查…</small><a id="model-link" target="_blank" rel="noopener noreferrer">下载链接</a></div><button type="button" id="model-download">下载并安装</button></div>
+      </section>
+      <section class="panel setup"><div class="section-heading"><h2>新建听译任务</h2><span class="tag">本地处理</span></div>
+      <form id="create-form">
+        <label for="source">视频 / 音频原文件</label><input id="source" name="source" placeholder="粘贴完整文件路径，例如 D:\视频\原片.mp4" required>
+        <label class="file-pick" for="upload"><span>＋ 选择本地文件</span><small id="upload-label">大文件建议直接填写路径，免复制</small></label><input type="file" id="upload" accept="video/*,audio/*" hidden>
+        <label for="url">原发布链接 <small>可选</small></label><input id="url" name="url" type="url" placeholder="https://www.youtube.com/watch?v=…">
+        <label for="description">简介补充 / 专有名词 <small>可选</small></label><textarea id="description" name="description" rows="2" placeholder="抓取失败时可粘贴简介；也可补充人物名、作品名"></textarea>
+        <div class="field-pair"><div><label for="language">原文语言</label><select id="language" name="language"><option value="ja">日语 → 简体中文</option><option value="en">英语 → 简体中文</option><option value="ko">韩语 → 简体中文</option><option value="auto">自动检测 → 简体中文</option></select></div><div><label for="until">处理到</label><select id="until"><option value="export">全流程 · 导出双语</option><option value="transcribe">原文识别与切分</option><option value="audio">仅提取音轨</option><option value="metadata">仅提取发布信息</option></select></div></div>
+        <details><summary>识别与翻译设置</summary>
+          <label for="model">识别模型 / 本地模型目录</label><input id="model" name="model" value="small">
+          <label for="device">识别设备</label><select id="device" name="device"><option value="cpu">CPU · int8</option><option value="cuda">NVIDIA GPU · float16</option></select>
+          <label class="check"><input type="checkbox" id="vad" checked>过滤无声片段（耳语漏识别时可关闭）</label>
+          <div class="field-pair"><div><label for="max-chars">每句最多字数</label><input id="max-chars" name="max_chars" type="number" min="10" max="100" value="36"></div><div><label for="max-duration">每句最多秒数</label><input id="max-duration" name="max_duration" type="number" min="2" max="15" step="0.5" value="6"></div></div>
+          <label for="api-base">翻译接口（兼容 Chat Completions）</label><input id="api-base" name="api_base" value="https://api.openai.com/v1">
+          <label for="translation-model">翻译模型名称</label><input id="translation-model" name="translation_model" placeholder="填写服务商提供的模型名称">
+          <p class="hint">密钥由服务端环境变量 ASMR_API_KEY 读取。翻译时会向此接口发送字幕与简介；音频在本地识别。</p>
+        </details>
+        <button type="submit" class="primary" id="start">开始处理 <span>↗</span></button>
+        <p class="hint">原文件保留不变。自动识别与文本校对完成后，请听音复核耳语及低置信度片段。</p>
+      </form></section>
+      <section class="panel history"><div class="section-heading"><h2>任务记录</h2><button type="button" class="text-button" id="refresh">刷新</button></div><div id="jobs"><p class="hint">还没有任务，从原片开始吧。</p></div></section>
+    </aside>
+    <section class="panel editor">
+      <div class="editor-head"><div><p class="eyebrow">字幕工作区</p><h2 id="job-title">等待导入原片</h2></div><span class="tag" id="job-status">未开始</span></div>
+      <ol class="steps" id="steps"><li data-stage="metadata"><b>01</b>发布信息</li><li data-stage="audio"><b>02</b>提取音轨</li><li data-stage="transcribe"><b>03</b>识别切分</li><li data-stage="translate"><b>04</b>翻译校对</li><li data-stage="export"><b>05</b>导出字幕</li></ol>
+      <div id="job-error" class="error" hidden></div>
+      <div class="transport" id="transport" hidden><audio id="audio" controls preload="metadata"></audio><button type="button" id="continue">继续全流程</button></div>
+      <details id="metadata-box" hidden><summary>原发布信息</summary><div id="metadata-text"></div></details>
+      <div class="toolbar"><div class="tabs"><button class="selected" id="all">全部字幕 <span id="count">0</span></button><button id="flagged">待复核 <span id="review-count">0</span></button></div><input id="search" aria-label="搜索字幕" placeholder="搜索原文 / 译文"><button class="save" id="save" disabled>保存并导出</button></div>
+      <div class="subtitle-head"><span>时间 / 操作</span><span>原文 / 中文译文</span><span>复核</span></div>
+      <div id="subtitles"><div class="empty"><div class="empty-icon">〰</div><h3>让声音有迹可循</h3><p>字幕生成后，在这里试听、改译文、调整时间轴。<br>低置信度片段会单独标记，方便逐条确认。</p><div class="empty-format">原文 <span>＋</span> 简体中文 <span>→</span> SRT</div></div></div>
+      <footer class="editor-footer"><span id="save-state">字幕将随任务进度自动载入</span><div id="downloads"></div></footer>
+      <details class="logs-box"><summary>处理日志</summary><pre id="logs">等待任务开始。</pre></details>
+    </section>
+  </div>
+</main><div id="toast" role="status" aria-live="polite" hidden></div>
+<dialog id="tutorial" aria-labelledby="tutorial-title"><div class="tutorial-heading"><img src="/logo.jpg" alt="一伯六十八的头像"><div><p class="eyebrow">欢迎来到一伯六十八的ASMR听译间</p><h2 id="tutorial-title">从原片开始你的第一次听译</h2></div></div><div id="tutorial-content"></div><div class="tutorial-progress" id="tutorial-progress" aria-live="polite"></div><div class="tutorial-actions"><button type="button" id="tutorial-later">稍后再看</button><div><button type="button" id="tutorial-back">上一步</button><button type="button" id="tutorial-next" class="primary">下一步</button></div></div></dialog>
+<script src="/app.js"></script></body></html>
+
