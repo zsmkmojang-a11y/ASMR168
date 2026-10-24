@@ -3,11 +3,19 @@ from pathlib import Path
 import json
 import os
 import sys
+import wave
 from playwright.sync_api import sync_playwright, expect
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS = ROOT / 'tests' / 'artifacts'
 ARTIFACTS.mkdir(exist_ok=True)
+sample = ARTIFACTS / 'sample.wav'
+if not sample.exists():
+    with wave.open(str(sample), 'wb') as wav:
+        wav.setnchannels(1)
+        wav.setsampwidth(2)
+        wav.setframerate(16000)
+        wav.writeframes(b'\0\0' * 16000 * 6)
 BASE = os.getenv('ASMR_TEST_BASE', 'http://127.0.0.1:8765')
 
 with sync_playwright() as pw:
@@ -34,7 +42,7 @@ with sync_playwright() as pw:
     page.locator('#tutorial-later').click()
     page.screenshot(path=str(ARTIFACTS/'desktop-empty.png'),full_page=True)
     # Create a real audio extraction job through the form.
-    page.get_by_label('视频 / 音频原文件').fill(str(ARTIFACTS/'sample.wav'))
+    page.get_by_label('视频 / 音频原文件').fill(str(sample))
     page.get_by_label('处理到').select_option('audio')
     page.get_by_role('button',name='开始处理').click()
     page.wait_for_function('document.querySelector("audio").getAttribute("src") && !document.querySelector("#continue").disabled', timeout=30000)

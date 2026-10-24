@@ -88,6 +88,6 @@ $env:ASMR_TRANSLATION_MODEL = '服务商提供的模型名称'
 
 测试使用临时目录，覆盖时间精度、切分、无音轨失败、断点续跑、HTTP 输入校验、导出和模拟翻译接口，不调用收费服务。运行时真实依赖以及模型效果另行验证。
 
-可选浏览器回归脚本为 `tests/browser_check.py`，需额外安装 Playwright 并有 Microsoft Edge；本机服务启动后执行。它使用 `tests/artifacts/sample.wav` 短音频创建测试任务，并注入明确标记的字幕样例，测试编辑、切分、保存、下载、无效时间拒绝、试听及 390 px 布局。样例字幕不代表识别结果。真实识别另用原音频的 12 秒片段验证，自动结果仍须听音复核。
+可选浏览器回归脚本为 `tests/browser_check.py`，需额外安装 Playwright 并有 Microsoft Edge；本机服务启动后执行。它自动生成短测试音频创建任务，并注入明确标记的字幕样例，测试编辑、切分、保存、下载、无效时间拒绝、试听及 390 px 布局。样例字幕不代表识别结果。真实识别另用原音频的 12 秒片段验证，自动结果仍须听音复核。
 
 依赖接口依据：[faster-whisper 官方文档](https://github.com/SYSTRAN/faster-whisper)、[yt-dlp 官方接口](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py)。
