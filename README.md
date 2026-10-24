@@ -14,7 +14,7 @@
 
 浏览器打开 http://127.0.0.1:8765 。程序仅监听本机。首次启动会自动显示使用教程，完成后可从右上角“使用教程”再次打开。
 
-本地构建的 Windows 安装包位于 `release/ASMR168-Setup-1.1.0.exe`。安装后从开始菜单启动，不需要单独安装 Python。安装包不包含 FFmpeg 和离线识别模型；首次启动后在首页“运行组件”分别点击下载，来源为 [Gyan FFmpeg Essentials](https://www.gyan.dev/ffmpeg/builds/) 和 [Systran faster-whisper-small](https://huggingface.co/Systran/faster-whisper-small)。FFmpeg 下载时按发布方 SHA-256 文件校验，模型下载完成后尝试加载校验。下载后分别存放在 `%LOCALAPPDATA%\ASMR168\bin` 与 `models\small`，后续可离线识别。任务与教程状态也在该用户数据目录，卸载不会删除。翻译密钥可写在首次启动自动生成的 `app.env` 中；保存后重启应用。原视频仍由用户选择本机路径。
+Windows 安装包可从 [GitHub Releases](https://github.com/zsmkmojang-a11y/ASMR168/releases/tag/v1.1.0) 下载；本地构建的文件位于 `release/ASMR168-Setup-1.1.0.exe`。安装后从开始菜单启动，不需要单独安装 Python。安装包不包含 FFmpeg 和离线识别模型；首次启动后在首页“运行组件”分别点击下载，来源为 [Gyan FFmpeg Essentials](https://www.gyan.dev/ffmpeg/builds/) 和 [Systran faster-whisper-small](https://huggingface.co/Systran/faster-whisper-small)。FFmpeg 下载时按发布方 SHA-256 文件校验，模型下载完成后尝试加载校验。下载后分别存放在 `%LOCALAPPDATA%\ASMR168\bin` 与 `models\small`，后续可离线识别。任务与教程状态也在该用户数据目录，卸载不会删除。翻译密钥可写在首次启动自动生成的 `app.env` 中；保存后重启应用。原视频仍由用户选择本机路径。
 
 Windows 也可双击 `start.cmd` 启动，避免 PowerShell 脚本执行策略限制。或者直接执行：
 
