@@ -2,7 +2,7 @@
 !include "MUI2.nsh"
 
 !define APP_NAME "一伯六十八的ASMR听译间"
-!define APP_VERSION "1.1.2"
+!define APP_VERSION "1.1.3"
 !define APP_EXE "ASMR168.exe"
 
 Name "${APP_NAME}"
@@ -12,7 +12,7 @@ RequestExecutionLevel user
 SetCompressor /SOLID zlib
 Icon "..\static\app.ico"
 UninstallIcon "..\static\app.ico"
-VIProductVersion "1.1.2.0"
+VIProductVersion "1.1.3.0"
 VIAddVersionKey /LANG=2052 "ProductName" "${APP_NAME}"
 VIAddVersionKey /LANG=2052 "FileDescription" "${APP_NAME} 安装程序"
 VIAddVersionKey /LANG=2052 "FileVersion" "${APP_VERSION}"
@@ -30,7 +30,7 @@ Section "Install"
   SetOutPath "$INSTDIR"
   File /r "..\dist\ASMR168\*.*"
   FileOpen $0 "$INSTDIR\.asmr168-install-marker" w
-  FileWrite $0 "ASMR168 1.1.2"
+  FileWrite $0 "ASMR168 1.1.3"
   FileClose $0
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   CreateDirectory "$SMPROGRAMS\ASMR168"

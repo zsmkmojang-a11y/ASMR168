@@ -145,6 +145,22 @@ class PipelineTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Codex CLI'):
                 p.translate_batch({}, '', rows)
 
+    def test_codex_retries_empty_translation_without_saving_it(self):
+        rows = sample_rows()
+        attempts = []
+        def fake_run(command, **kwargs):
+            attempts.append(1)
+            output = Path(command[command.index('-o') + 1])
+            output.write_text(json.dumps({'segments': [{
+                'id': 1, 'source': rows[0]['source'],
+                'translation': '' if len(attempts) == 1 else '你好。', 'note': ''
+            }]}, ensure_ascii=False), encoding='utf-8')
+            return type('Result', (), {'returncode': 0})()
+        with patch.object(p, 'codex_executable', return_value='codex'), patch.object(p.subprocess, 'run', side_effect=fake_run):
+            result = p.translate_batch({}, '', rows)
+        self.assertEqual(len(attempts), 2)
+        self.assertEqual(result[1]['translation'], '你好。')
+
     def test_translation_backend_defaults_for_existing_api_settings(self):
         with patch.dict(os.environ, {'ASMR_TRANSLATION_MODEL': 'configured-model'}):
             job = self.make_job()
