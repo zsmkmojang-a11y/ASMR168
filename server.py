@@ -140,10 +140,10 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json({'error': '页面不存在'}, 404)
                 else:
                     self.send_file(p.ROOT / 'static' / files[path])
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            pass
         except (ValueError, KeyError, OSError) as exc:
             self.send_json({'error': str(exc)}, 400)
-        except (BrokenPipeError, ConnectionResetError):
-            pass
 
     def do_POST(self):
         if not self.allowed() or self.headers.get('X-ASMR-Client') != 'webui':
@@ -214,6 +214,8 @@ class Handler(BaseHTTPRequestHandler):
                         job.update(state='idle', error='')
                         p.write_json(folder / 'job.json', job)
                     self.send_json({'ok': True, 'count': len(rows)})
+        except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            pass
         except (ValueError, KeyError, TypeError, OSError) as exc:
             self.send_json({'error': str(exc)}, 400)
 

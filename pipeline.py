@@ -78,7 +78,7 @@ def environment():
             'api_base': os.getenv('ASMR_API_BASE', 'https://api.openai.com/v1'),
             'translation_model': os.getenv('ASMR_TRANSLATION_MODEL', ''),
             'model_ready': Path(model_default()).is_dir(),
-            'app_name': '一伯六十八的ASMR听译间', 'version': '1.1.0', 'app_home': str(APP_HOME)}
+            'app_name': '一伯六十八的ASMR听译间', 'version': '1.1.1', 'app_home': str(APP_HOME)}
 
 
 def create_job(config):

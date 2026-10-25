@@ -8,7 +8,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / 'packaging' / 'tools' / 'nsis-3.11'
 DIST = ROOT / 'dist' / 'ASMR168'
-VERSION = '1.1.0'
+VERSION = '1.1.1'
 
 
 def main():

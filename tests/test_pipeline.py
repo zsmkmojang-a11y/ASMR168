@@ -192,6 +192,26 @@ class PipelineTests(unittest.TestCase):
         finally:
             http.shutdown(); http.server_close(); thread.join()
 
+    def test_disconnected_client_does_not_receive_error_response(self):
+        handler = object.__new__(server.Handler)
+        handler.path = '/'
+        for disconnect in (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            with self.subTest(disconnect=disconnect.__name__), \
+                 patch.object(server.Handler, 'allowed', return_value=True), \
+                 patch.object(server.Handler, 'send_file', side_effect=disconnect()), \
+                 patch.object(server.Handler, 'send_json') as send_json:
+                handler.do_GET()
+                send_json.assert_not_called()
+        handler.path = '/api/jobs'
+        handler.headers = {'X-ASMR-Client': 'webui'}
+        for disconnect in (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+            with self.subTest(method='POST', disconnect=disconnect.__name__), \
+                 patch.object(server.Handler, 'allowed', return_value=True), \
+                 patch.object(server.Handler, 'body', side_effect=disconnect()), \
+                 patch.object(server.Handler, 'send_json') as send_json:
+                handler.do_POST()
+                send_json.assert_not_called()
+
     def test_onboarding_persists_per_user_home(self):
         with patch.object(p, 'APP_HOME', self.root):
             http = ThreadingHTTPServer(('127.0.0.1', 0), server.Handler)
