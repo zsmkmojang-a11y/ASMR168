@@ -107,6 +107,8 @@ $('create-form').onsubmit = async event => {
     const until = $('until').value;
     if (until !== 'metadata' && !window.dependencyState?.ffmpeg.ready) throw new Error('请先下载 FFmpeg');
     if (!['metadata','audio'].includes(until) && !window.dependencyState?.model.ready && config.model === 'small') throw new Error('请先下载识别模型');
+    if (until === 'export' && config.translation_backend === 'codex' && !window.codexAvailable) throw new Error('请先安装并登录本机 Codex CLI');
+    if (until === 'export' && config.translation_backend === 'api' && !config.translation_model) throw new Error('请填写翻译模型名称');
     const job = await api('/api/jobs',config);
     renderJob(await api('/api/jobs/'+job.id));
     await api(`/api/jobs/${job.id}/run`,{until:$('until').value});
@@ -144,12 +146,21 @@ async function init() {
     window.studioHome = env.app_home;
     $('model').value = env.model; $('api-base').value = env.api_base; $('translation-model').value = env.translation_model;
     window.apiKeyReady = env.api_key;
+    window.codexAvailable = env.codex_available;
+    syncTranslationBackend();
     await refreshDependencies();
     await refreshJobs();
     const onboarding = await api('/api/onboarding');
     if (!onboarding.completed) openTutorial();
   } catch(e) { $('health').textContent = '连接失败'; toast(e.message); }
 }
+function syncTranslationBackend() {
+  const apiMode = $('translation-backend').value === 'api';
+  $('api-settings').hidden = !apiMode;
+  $('codex-hint').hidden = apiMode;
+  if (window.dependencyState) refreshDependencies();
+}
+$('translation-backend').onchange = syncTranslationBackend;
 setInterval(async () => {
   if (!current || loading || saving) return;
   loading = true;
@@ -183,7 +194,7 @@ async function refreshDependencies() {
     }
     const missing = [!state.ffmpeg.ready && 'FFmpeg', !state.model.ready && '识别模型'].filter(Boolean);
     $('health').textContent = missing.length ? '待下载：'+missing.join('、') : '● 本地识别已就绪';
-    if (!window.apiKeyReady) $('health').textContent += ' · 翻译密钥未设置';
+    if (!window.codexAvailable && $('translation-backend').value === 'codex') $('health').textContent += ' · 未找到 Codex CLI';
   } catch(e) { $('health').textContent = '组件状态获取失败'; } finally { dependencyBusy = false; }
 }
 for (const kind of ['ffmpeg','model']) $(kind+'-download').onclick = async () => {
@@ -196,7 +207,7 @@ let tutorialStep = 0;
 const tutorialSteps = [
   {title:'01 · 导入原片和发布信息', text:'选择本地视频或音频，也可以直接粘贴文件完整路径。大文件推荐用路径，避免复制。原发布链接用于提取简介、人物名和术语；抓取失败时，可在简介补充栏手动填写。', hint:'原文件始终保持不变，处理结果单独保存。'},
   {title:'02 · 下载运行组件', text:'安装包不包含 FFmpeg 和语音模型。首次使用前，在首页“运行组件”分别点击“下载并安装”；也可以打开旁边的官方下载链接。下载完成后可离线识别。', hint:'FFmpeg 下载约 109 MB，small 模型约 500 MB；下载时请保持程序运行。'},
-  {title:'03 · 设置翻译接口', text:'自动翻译需要兼容 Chat Completions 的服务地址、模型名称和密钥。接口与模型在“识别与翻译设置”中填写。安装版可在用户数据目录的 app.env 文件填写 ASMR_API_KEY，保存后重新启动应用。', hint:'翻译会发送字幕与简介给该接口，可能产生服务费用；音频在本地识别。没有密钥时，可先只识别原文并手动填写中文。'},
+  {title:'03 · 使用本机 Codex 翻译', text:'默认调用本机已登录的 Codex CLI。若未安装，请先安装并运行 codex login；然后在“识别与翻译设置”选择本机 Codex。也可切换至自定义翻译 API。', hint:'翻译会发送字幕与简介给所选服务，可能消耗账户用量；音频在本地识别。已识别的旧任务可在更新后继续翻译。'},
   {title:'04 · 试听校对，然后导出', text:'逐句试听，修改原文、译文和时间。切分时先在两种语言中分别放置光标，再点“切分”，并试听调整时间。确认后勾选复核，点击“保存并导出”下载 SRT。', hint:'自动字幕都需要听音复核。任务失败可继续运行；本教程随时可从页面右上角重新打开。'}
 ];
 function renderTutorial() {

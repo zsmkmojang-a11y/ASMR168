@@ -111,6 +111,7 @@ class PipelineTests(unittest.TestCase):
 
     def test_translation_partial_resume(self):
         job = self.make_job(); folder = p.job_path(job['id'])
+        job['config']['translation_backend'] = 'api'
         p.write_json(folder / 'segments.json', sample_rows(21))
         p.write_json(folder / 'metadata.json', {'description': '测试'})
         calls = []
@@ -124,6 +125,33 @@ class PipelineTests(unittest.TestCase):
         with patch.object(p, 'translate_batch', side_effect=translator):
             p.translate(job['config'], folder, lambda x: None)
         self.assertEqual(calls, [20,1,1])
+
+    def test_codex_translation_uses_read_only_cli_and_validates_output(self):
+        rows = sample_rows(2)
+        def fake_run(command, **kwargs):
+            self.assertIn('--sandbox', command)
+            self.assertEqual(command[command.index('--sandbox') + 1], 'read-only')
+            self.assertIn('--ephemeral', command)
+            self.assertIn('こんにちは。'.encode('utf-8'), kwargs['input'])
+            output = Path(command[command.index('-o') + 1])
+            output.write_text(json.dumps({'segments': [
+                {'id': row['id'], 'source': row['source'], 'translation': '你好。', 'note': ''}
+                for row in rows]}, ensure_ascii=False), encoding='utf-8')
+            return type('Result', (), {'returncode': 0})()
+        with patch.object(p, 'codex_executable', return_value='codex'), patch.object(p.subprocess, 'run', side_effect=fake_run):
+            result = p.translate_batch({}, '简介', rows)
+        self.assertEqual(result[1]['translation'], '你好。')
+        with patch.object(p, 'codex_executable', return_value=None):
+            with self.assertRaisesRegex(ValueError, 'Codex CLI'):
+                p.translate_batch({}, '', rows)
+
+    def test_translation_backend_defaults_for_existing_api_settings(self):
+        with patch.dict(os.environ, {'ASMR_TRANSLATION_MODEL': 'configured-model'}):
+            job = self.make_job()
+        self.assertEqual(job['config']['translation_backend'], 'api')
+        with patch.dict(os.environ, {'ASMR_TRANSLATION_MODEL': ''}):
+            other = self.make_job()
+        self.assertEqual(other['config']['translation_backend'], 'codex')
 
     def test_restart_invalidates_old_exports_even_on_failure(self):
         job = self.make_job(); folder = p.job_path(job['id'])
